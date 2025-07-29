@@ -1,0 +1,373 @@
+import { Farm, ProductionParaMeterType } from './Farm';
+import { SingleOrganisation } from './Organization';
+
+export interface Production {
+  id: number;
+  fishFarmId: string;
+  productionUnitId: string;
+  biomass: string;
+  count: string;
+  currentBatch: string;
+  stocked: string;
+  meanWeight: string;
+  createdBy: string;
+  updatedBy: string;
+  createdAt: string;
+  updatedAt: string;
+  currentDate: string;
+  organisationId: number;
+  isManager?: boolean;
+  farm: Farm;
+  field?: string;
+  organisation: SingleOrganisation;
+  fishCount: string;
+  batchNumberId: string;
+  age: string;
+  meanLength: string;
+  stockingDensityKG: string;
+  stockingDensityNM: string;
+  stockingLevel: string;
+  waterTemp: string;
+  DO: string;
+  TSS: string;
+  NH4: string;
+  NO3: string;
+  NO2: string;
+  ph: string;
+  visibility: string;
+  productionUnit: {
+    YearBasedPredicationProductionUnit?: ProductionParaMeterType[];
+    id: string;
+    name: string;
+    type: string;
+    capacity: string;
+    waterflowRate: string;
+    createdAt: string;
+    updatedAt: string;
+    farmId: string;
+  };
+  fishSupply: {
+    batchNumber: string;
+    age: string;
+  };
+  WaterManageHistory?: {
+    id: number;
+    currentDate: string;
+    waterTemp: string;
+    DO: string;
+    TSS: string;
+    NH4: string;
+    NO3: string;
+    NO2: string;
+    ph: string;
+    visibility: string;
+    productionId: number;
+  }[];
+  WaterManageHistoryAvgrage?: {
+    id: number;
+    currentDate: string;
+    waterTemp: string;
+    DO: string;
+    TSS: string;
+    NH4: string;
+    NO3: string;
+    NO2: string;
+    ph: string;
+    visibility: string;
+    productionId: number;
+    createdAt: string;
+  }[];
+  FishManageHistory: {
+    id: number;
+    fishFarmId: string;
+    productionUnitId: string;
+    biomass: string;
+    fishCount: string;
+    batchNumberId: number;
+    currentDate: string;
+    age: string;
+    meanLength: string;
+    meanWeight: string;
+    stockingDensityKG: string;
+    stockingDensityNM: string;
+    stockingLevel: string;
+    createdBy: string;
+    updatedBy: string;
+    createdAt: string;
+    updatedAt: string;
+    organisationId: number;
+    field: string;
+    productionId: number;
+  }[];
+}
+export interface MonthyFishAverage {
+  biomass: number;
+  fishCount: number;
+  meanLength: number;
+  meanWeight: number;
+  stockingDensityKG: number;
+  stockingDensityNM: number;
+}
+export interface MonthyWaterAverage {
+  DO: number;
+  NH4: number;
+  NO2: number;
+  NO3: number;
+  TSS: number;
+  ph: number;
+  visibility: number;
+  waterTemp: number;
+}
+export interface FarmGroupUnit {
+  id: number;
+  waterTemp: string;
+  DO: string;
+  TSS: string;
+  NH4: string;
+  NO3: string;
+  NO2: string;
+  ph: string;
+  createdAt: string;
+  visibility: string;
+  productionUnit: {
+    id: string;
+    name: string;
+    type: string;
+    capacity: string;
+    waterflowRate: string;
+    createdAt: string;
+    updatedAt: string;
+    farmId: string;
+    YearBasedPredicationProductionUnit?: ProductionParaMeterType[];
+  };
+  monthlyAverages?: MonthyFishAverage;
+  yearlyAverages?: MonthyFishAverage;
+  allTimeAverages?: MonthyFishAverage;
+  individualAverages?: MonthyFishAverage;
+  monthlyAveragesWater?: MonthyWaterAverage;
+  yearlyAveragesWater?: MonthyWaterAverage;
+  allTimeAveragesWater?: MonthyWaterAverage;
+  individualAveragesWater?: MonthyWaterAverage;
+  WaterManageHistoryAvgrage?: {
+    id: number;
+    currentDate: string;
+    waterTemp: string;
+    DO: string;
+    TSS: string;
+    NH4: string;
+    NO3: string;
+    NO2: string;
+    ph: string;
+    visibility: string;
+    productionId: number;
+    createdAt: string;
+  }[];
+  fishManageHistory: {
+    id: number;
+    fishFarmId: string;
+    productionUnitId: string;
+    biomass: string;
+    fishCount: string;
+    batchNumberId: number;
+    currentDate: string;
+    age: string;
+    meanLength: string;
+    meanWeight: string;
+    stockingDensityKG: string;
+    stockingDensityNM: string;
+    stockingLevel: string;
+    createdBy: string;
+    updatedBy: string;
+    createdAt: string;
+    updatedAt: string;
+    organisationId: number;
+    field: string;
+    productionId: number;
+  }[];
+  biomass: string;
+  fishCount: string;
+  batchNumberId: number;
+  age: string;
+  field?: string;
+  meanLength: string;
+  meanWeight: string;
+  stockingDensityKG: string;
+  stockingDensityNM: string;
+  stockingLevel: string;
+  isManager: boolean;
+  fishSupply: {
+    batchNumber: string;
+    age: string;
+  };
+  farm: Farm;
+  organisation: SingleOrganisation;
+  createdBy: string;
+  updatedBy: string;
+  updatedAt: string;
+}
+export interface FarmGroup {
+  farm: string;
+  units: FarmGroupUnit[];
+}
+[];
+
+export interface FishManageHistoryGroup {
+  farm: string;
+  units: {
+    id: number;
+    productionUnit: {
+      id: string;
+      name: string;
+      type: string;
+      capacity: string;
+      waterflowRate: string;
+      createdAt: string;
+      updatedAt: string;
+      farmId: string;
+    };
+    biomass: string;
+    fishCount: string;
+    batchNumberId: number;
+    age: string;
+    field?: string;
+    meanLength: string;
+    meanWeight: string;
+    stockingDensityKG: string;
+    stockingDensityNM: string;
+    stockingLevel: string;
+    isManager: boolean;
+    organisation: SingleOrganisation;
+    createdBy: string;
+    updatedBy: string;
+    createdAt: string;
+    updatedAt: string;
+    currentDate: string;
+    farm: Farm;
+    fishSupply: {
+      batchNumber: string;
+      age: string;
+    };
+    fishManageHistory?: {
+      id: number;
+      fishFarmId: string;
+      productionUnitId: string;
+      biomass: string;
+      fishCount: string;
+      batchNumberId: number;
+      currentDate: string;
+      age: string;
+      meanLength: string;
+      meanWeight: string;
+      stockingDensityKG: string;
+      stockingDensityNM: string;
+      stockingLevel: string;
+      createdBy: string;
+      updatedBy: string;
+      createdAt: string;
+      updatedAt: string;
+      organisationId: number;
+      field: string;
+      productionId: number;
+    }[];
+  }[];
+}
+export interface WaterManageHistoryGroup {
+  unit: string;
+  farm: string;
+  units: {
+    id: number;
+    productionUnit: {
+      id: string;
+      name: string;
+      type: string;
+      capacity: string;
+      waterflowRate: string;
+      createdAt: string;
+      updatedAt: string;
+      farmId: string;
+    };
+    biomass: string;
+    fishCount: string;
+    batchNumberId: number;
+    age: string;
+    field?: string;
+    meanLength: string;
+    meanWeight: string;
+    stockingDensityKG: string;
+    stockingDensityNM: string;
+    stockingLevel: string;
+    isManager: boolean;
+    createdAt: string;
+    fishSupply: {
+      batchNumber: string;
+      age: string;
+    };
+    WaterManageHistoryAvgrage?: {
+      id: number;
+      currentDate: string;
+      waterTemp: string;
+      DO: string;
+      TSS: string;
+      NH4: string;
+      NO3: string;
+      NO2: string;
+      ph: string;
+      visibility: string;
+      productionId: number;
+      createdAt: string;
+    }[];
+    WaterSampleHistory?: {
+      id: number;
+      currentDate: string;
+      waterTemp: string;
+      DO: string;
+      TSS: string;
+      NH4: string;
+      NO3: string;
+      NO2: string;
+      ph: string;
+      visibility: string;
+      productionId: number;
+    }[];
+    waterManageHistory?: {
+      DO: string;
+      NH4: string;
+      NO2: string;
+      NO3: string;
+      TSS: string;
+      currentDate: string;
+      id: number;
+      ph: string;
+      productionId: number;
+      visibility: string;
+      waterTemp: string;
+    }[];
+    organisation: SingleOrganisation;
+    farm: Farm;
+    createdBy: string;
+    updatedBy: string;
+    updatedAt: string;
+    fishManageHistory: {
+      id: number;
+      fishFarmId: string;
+      productionUnitId: string;
+      biomass: string;
+      fishCount: string;
+      batchNumberId: number;
+      currentDate: string;
+      age: string;
+      meanLength: string;
+      meanWeight: string;
+      stockingDensityKG: string;
+      stockingDensityNM: string;
+      stockingLevel: string;
+      createdBy: string;
+      updatedBy: string;
+      createdAt: string;
+      updatedAt: string;
+      organisationId: number;
+      field: string;
+      productionId: number;
+    }[];
+  }[];
+}

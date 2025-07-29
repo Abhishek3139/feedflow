@@ -1,0 +1,584 @@
+// schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL") // uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // uses a direct connection
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum UserRole {
+  SUPERADMIN
+  ADMIN
+  MEMBER
+  FARMMANAGER
+  NONADMIN
+}
+
+model User {
+  id             Int          @id @default(autoincrement())
+  name           String?
+  email          String       @unique
+  password       String?
+  status         UserStatus   @default(ACTIVE)
+  role           UserRole     @default(MEMBER)
+  image          String?
+  imageUrl       String?
+  updatedBy      String?
+  createdBy      String?
+  organisationId Int
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onUpdate: Cascade)
+  invite         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  Farm           Farm[]
+  FarmManger     FarmManger[]
+  access         Boolean      @default(true)
+  permissions    Json         @default("{}")
+  Contact        Contact[]
+}
+
+model Organisation {
+  id       Int     @id @default(autoincrement())
+  image    String?
+  imageUrl String?
+  name     String  @unique
+
+  organisationCode String   @default("")
+  organisationType String
+  updatedBy        String?
+  createdBy        Int      @default(1)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  users            User[]
+  addressId        String?  @unique
+  address          Address? @relation(fields: [addressId], references: [id], onUpdate: Cascade)
+
+  contact           Contact[]
+  hatchery          Hatchery[]          @relation("HatcheryCreator")
+  fishSupply        FishSupply[]        @relation("fishSupplyCreator")
+  Farm              Farm[]
+  FeedSupply        FeedSupply[]
+  FishSupply        FishSupply[]
+  production        production[]
+  FishManageHistory FishManageHistory[]
+  GrowthModels      GrowthModel[]
+  FeedStore         FeedStore[]
+  models            Model[]
+
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([organisationCode])
+}
+
+model OrganisationCount {
+  id    Int @id @default(1)
+  count Int
+}
+
+model Address {
+  id       String  @id @default(cuid())
+  name     String?
+  street   String?
+  province String?
+  city     String?
+  postCode String?
+  country  String?
+
+  organisation   Organisation?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organisationId Int?
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Contact {
+  id             String        @id @default(cuid())
+  name           String?
+  email          String?
+  phone          String?
+  role           String?
+  permission     UserRole      @default(NONADMIN)
+  userId         Int           @default(1)
+  user           User          @relation(fields: [userId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  invite         Boolean       @default(false)
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+  organisationId Int?
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Farm {
+  id             String        @id @default(cuid())
+  name           String        @unique
+  farmAltitude   String
+  farmAddressId  String?       @unique
+  lat            String?
+  lng            String?
+  farmAddress    FarmAddress?  @relation(fields: [farmAddressId], references: [id], onUpdate: Cascade)
+  fishFarmer     String
+  updatedBy      String?
+  createdBy      String?
+  organisationId Int?
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  productionUnits                 ProductionUnit[]
+  production                      production[]
+  User                            User?                             @relation(fields: [userId], references: [id])
+  userId                          Int?
+  FarmManger                      FarmManger[]
+  FishManageHistory               FishManageHistory[]
+  WaterQualityPredictedParameters WaterQualityPredictedParameters[]
+  FishSupply                      FishSupply[]
+  FeedProfile                     FeedProfile[]
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FeedProfile {
+  id        Int      @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  farmId    String
+  farm      Farm     @relation(fields: [farmId], references: [id])
+  profiles  Json?
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FeedProfileProductionUnit {
+  id               Int            @id @default(autoincrement())
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  profiles         Json?
+  productionUnitId String
+  ProductionUnit   ProductionUnit @relation(fields: [productionUnitId], references: [id])
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model YearBasedPredication {
+  id                               Int                             @id @default(autoincrement())
+  waterQualityPredictedParameterId Int
+  waterQualityPredictedParameter   WaterQualityPredictedParameters @relation(fields: [waterQualityPredictedParameterId], references: [id])
+  createdAt                        DateTime                        @default(now())
+  updatedAt                        DateTime                        @updatedAt
+
+  waterTemp  Json?
+  DO         Json?
+  TSS        Json?
+  NH4        Json?
+  NO3        Json?
+  NO2        Json?
+  ph         Json?
+  visibility Json?
+  idealRange Json?
+
+  modelId Int?
+  Model   Model? @relation(fields: [modelId], references: [id])
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model WaterQualityPredictedParameters {
+  id     Int    @id @default(autoincrement())
+  farmId String
+  farm   Farm   @relation(fields: [farmId], references: [id])
+
+  updatedBy            String?
+  createdBy            String?
+  createdAt            DateTime               @default(now())
+  updatedAt            DateTime               @updatedAt
+  YearBasedPredication YearBasedPredication[]
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FarmAddress {
+  id           String  @id @default(cuid())
+  addressLine1 String
+  addressLine2 String?
+  province     String
+  city         String
+  zipCode      String
+  country      String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Farm      Farm?
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model YearBasedPredicationProductionUnit {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  waterTemp  Json?
+  DO         Json?
+  TSS        Json?
+  NH4        Json?
+  NO3        Json?
+  NO2        Json?
+  ph         Json?
+  visibility Json?
+  idealRange Json?
+
+  productionUnitId String
+  ProductionUnit   ProductionUnit @relation(fields: [productionUnitId], references: [id])
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model ProductionUnit {
+  id                                 String                               @id @default(cuid())
+  name                               String
+  type                               String
+  capacity                           String
+  waterflowRate                      String
+  createdAt                          DateTime                             @default(now())
+  updatedAt                          DateTime                             @updatedAt
+  Farm                               Farm?                                @relation(fields: [farmId], references: [id])
+  farmId                             String?
+  production                         production[]
+  FishManageHistory                  FishManageHistory[]
+  YearBasedPredicationProductionUnit YearBasedPredicationProductionUnit[]
+  FeedProfileProductionUnit          FeedProfileProductionUnit[]
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FeedSupply {
+  id                   String        @id @default(cuid())
+  feedIngredients      String
+  feedingGuide         String
+  productionIntensity  String
+  unit                 String
+  feedingPhase         String
+  lifeStage            String
+  shelfLife            String
+  productCode          String
+  feedSupplierCode     String
+  brandCode            String
+  productNameCode      String
+  productFormatCode    String
+  animalSizeInLength   String?
+  animalSizeInWeight   String?
+  specie               String
+  nutritionalPurpose   String
+  nutritionalClass     String
+  particleSize         String
+  productFormat        String
+  productName          String
+  brandName            String
+  feedSupplier         String
+  nutritionalGuarantee Json
+  updatedBy            String?
+  createdBy            String?
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+  organisationId       Int?
+  organisation         Organisation? @relation(fields: [organisationId], references: [id])
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Hatchery {
+  id             String        @id @default(cuid())
+  name           String
+  code           String
+  altitude       String
+  fishSpecie     String
+  createdBy      Int? // Optional field, nullable foreign key
+  updatedBy      String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  creator        Organisation? @relation("HatcheryCreator", fields: [createdBy], references: [id]) // Optional relation to User
+  organisationId Int?
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FishSupply {
+  id                Int                 @id @default(autoincrement())
+  batchNumber       String              @default("BB1")
+  organisation      Int
+  hatchingDate      String
+  spawningDate      String
+  spawningNumber    Int
+  age               String
+  broodstockMale    String?
+  broodstockFemale  String?
+  fishFarmId        String
+  farm              Farm                @relation(fields: [fishFarmId], references: [id])
+  status            String
+  productionUnits   String              @default("")
+  createdBy         Int? // Optional field, nullable foreign key
+  updatedBy         String?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  creator           Organisation?       @relation("fishSupplyCreator", fields: [createdBy], references: [id])
+  organisationId    Int?
+  organisationData  Organisation?       @relation(fields: [organisationId], references: [id])
+  production        production[]
+  farmMangerId      Int?
+  FarmManger        FarmManger?         @relation(fields: [farmMangerId], references: [id])
+  FishManageHistory FishManageHistory[]
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model WaterManageHistory {
+  id           Int         @id @default(autoincrement())
+  currentDate  String?
+  waterTemp    String?
+  DO           String?
+  TSS          String?
+  NH4          String?
+  NO3          String?
+  NO2          String?
+  ph           String?
+  visibility   String?
+  productionId Int?
+  production   production? @relation(fields: [productionId], references: [id])
+}
+
+model WaterManageHistoryAvgrage {
+  id           Int         @id @default(autoincrement())
+  currentDate  String?
+  waterTemp    String?
+  DO           String?
+  TSS          String?
+  NH4          String?
+  NO3          String?
+  NO2          String?
+  ph           String?
+  visibility   String?
+  productionId Int?
+  production   production? @relation(fields: [productionId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FishManageHistory {
+  id                Int             @id @default(autoincrement())
+  fishFarmId        String
+  farm              Farm?           @relation(fields: [fishFarmId], references: [id])
+  productionUnitId  String
+  biomass           String?
+  fishCount         String?
+  batchNumberId     Int?
+  currentDate       String?
+  age               String?
+  meanLength        String?
+  meanWeight        String?
+  stockingDensityKG String?
+  stockingDensityNM String?
+  stockingLevel     String?
+  createdBy         Int?
+  updatedBy         String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  organisationId    Int?
+  field             String?
+  organisation      Organisation?   @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  productionUnit    ProductionUnit? @relation(fields: [productionUnitId], references: [id])
+  production        production?     @relation(fields: [productionId], references: [id])
+  productionId      Int?
+  FishSupply        FishSupply?     @relation(fields: [fishSupplyId], references: [id])
+  fishSupplyId      Int?
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model production {
+  id                        Int                         @id @default(autoincrement())
+  fishFarmId                String
+  farm                      Farm?                       @relation(fields: [fishFarmId], references: [id])
+  productionUnitId          String
+  biomass                   String?
+  fishCount                 String?
+  batchNumberId             Int?
+  age                       String?
+  meanLength                String?
+  meanWeight                String?
+  stockingDensityKG         String?
+  stockingDensityNM         String?
+  stockingLevel             String?
+  createdBy                 Int? // Optional field, nullable foreign key
+  updatedBy                 String?
+  createdAt                 DateTime                    @default(now())
+  updatedAt                 DateTime                    @updatedAt
+  organisationId            Int?
+  field                     String?
+  waterTemp                 String?
+  DO                        String?
+  TSS                       String?
+  NH4                       String?
+  NO3                       String?
+  currentDate               String?
+  NO2                       String?
+  ph                        String?
+  visibility                String?
+  organisation              Organisation?               @relation(fields: [organisationId], references: [id], onDelete: SetNull)
+  productionUnit            ProductionUnit?             @relation(fields: [productionUnitId], references: [id])
+  fishSupply                FishSupply?                 @relation(fields: [batchNumberId], references: [id])
+  WaterManageHistory        WaterManageHistory[]
+  FishManageHistory         FishManageHistory[]
+  WaterManageHistoryAvgrage WaterManageHistoryAvgrage[]
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model FarmManger {
+  id         Int          @id @default(autoincrement())
+  userId     Int?
+  user       User?        @relation(fields: [userId], references: [id])
+  farmId     String?
+  farm       Farm?        @relation(fields: [farmId], references: [id])
+  createdBy  Int? // Optional field, nullable foreign key
+  updatedBy  String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  FishSupply FishSupply[]
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Model {
+  id                       Int                    @id @default(autoincrement())
+  name                     String?
+  specie                   String?
+  productionSystem         String?
+  adcCp                   Float?
+  adcCf                   Float?
+  adcNfe                  Float?
+  geCp                    Float?
+  geCf                    Float?
+  geNfe                   Float?
+  wasteFactor             Float?
+
+  temperatureCoefficient   String?
+  tgcA                    Float?
+  tgcB                    Float?
+  tgcC                    Float?
+  tgcD                    Float?
+  tgcE                    Float?
+  tFCRModel               String?
+  tFCRa                   Float?
+  tFCRb                   Float?
+  tFCRc                   Float?
+  
+  // Metadata
+  organisationId           Int?
+  organisation             Organisation?  @relation(fields: [organisationId], references: [id])
+  createdBy                Int?
+  updatedBy                String?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+  GrowthModel              GrowthModel[]
+  YearBasedPredication     YearBasedPredication[]
+}
+
+model GrowthModel {
+  id             Int           @id @default(autoincrement())
+  organisationId Int?
+  organisation   Organisation? @relation(fields: [organisationId], references: [id])
+  modelId        Int
+  models         Model         @relation(fields: [modelId], references: [id])
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+// model ProductSupplier {
+//   id        String    @id @default(uuid())
+//   suppliers Json      @default("[]")
+//   feedId    String
+//   feed      FeedStore @relation(fields: [feedId], references: [id])
+// }
+
+model FeedStore {
+  id                    String @id @default(uuid())
+  ProductSupplier       Json   @default("[]")
+  brandName             String @default("SAF 6000")
+  productName           String @default("Tilapia starter #0")
+  productFormat         String @default("Mash")
+  particleSize          String @default("#0")
+  fishSizeG             Float  @default(0.5)
+  nutritionalClass      String @default("Complete and balanced")
+  nutritionalPurpose    String @default("Primary feed source")
+  suitableSpecies       String @default("Tilapia")
+  suitabilityAnimalSize String @default("")
+  productionIntensity   String @default("Intensive")
+  suitabilityUnit       String @default("Hatchery")
+  feedingPhase          String @default("Pre-starter")
+  lifeStage             String @default("Fry")
+  shelfLifeMonths       Float  @default(12)
+  feedCost              Float  @default(32)
+  feedIngredients       String @default("Animal proteins, Plant proteins, Cereals and cereal derivates, Approved vitamins and minerals, Acidulants, Clay-minerals, Amino-acids, Botanical extracts")
+  moistureGPerKg        Float  @default(120)
+  crudeProteinGPerKg    Float  @default(400)
+  crudeFatGPerKg        Float  @default(50)
+  crudeFiberGPerKg      Float  @default(40)
+  crudeAshGPerKg        Float  @default(80)
+  nfe                   Int?   @default(310)
+  calciumGPerKg         Int?   @default(30)
+  phosphorusGPerKg      Int?   @default(7)
+  carbohydratesGPerKg   Int?   @default(310)
+  metabolizableEnergy   Int
+  feedingGuide          String @default("Feed according to the feedflow guide or as directed by a fish nutritionist")
+
+  geCoeffCP       Float
+  geCoeffCF       Float
+  geCoeffNFE      Float
+  ge              Float        @default(16.75)
+  digCP           Float        @default(3600)
+  digCF           Float        @default(450)
+  digNFE          Float        @default(1860)
+  deCP            Float        @default(8.50)
+  deCF            Float        @default(1.78)
+  deNFE           Float        @default(3.20)
+  de              Float        @default(13.47)
+  organaisationId Int          @default(1)
+  organisation    Organisation @relation(fields: [organaisationId], references: [id])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  // ProductSupplier ProductSupplier[]
+}
